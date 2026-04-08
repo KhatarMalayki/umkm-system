@@ -30,19 +30,6 @@ const decimalToFraction = (decimal: number): string => {
   return decimal.toString();
 };
 
-// Helper untuk konversi pecahan string ke desimal
-const fractionToDecimal = (fraction: string): number => {
-  const fractionMap: Record<string, number> = {
-    "1/4": 0.25,
-    "1/2": 0.5,
-    "3/4": 0.75,
-    "1": 1,
-    "1 1/2": 1.5,
-    "2": 2,
-  };
-  return fractionMap[fraction] || parseFloat(fraction);
-};
-
 export default function ProductCard({
   id,
   name,
@@ -54,7 +41,8 @@ export default function ProductCard({
   discount,
   onAddToCart,
 }: ProductCardProps) {
-  const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState(1); // Ukuran per item (untuk Kg/Liter)
+  const [quantity, setQuantity] = useState(1); // Jumlah item
   const [isAdding, setIsAdding] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
 
@@ -83,19 +71,18 @@ export default function ProductCard({
 
   const handleAddToCart = () => {
     setIsAdding(true);
-    onAddToCart(quantity);
+    // Total quantity = selectedSize * quantity
+    const totalQuantity = hasPresets ? selectedSize * quantity : quantity;
+    onAddToCart(totalQuantity);
     setQuantity(1);
+    setSelectedSize(1);
     setShowPresets(false);
     setTimeout(() => setIsAdding(false), 1000);
   };
 
   const handlePresetSelect = (value: number) => {
-    setQuantity(value);
+    setSelectedSize(value);
     setShowPresets(false);
-  };
-
-  const getDisplayQuantity = () => {
-    return decimalToFraction(quantity);
   };
 
   return (
@@ -172,15 +159,18 @@ export default function ProductCard({
 
         {/* Quantity & Add to Cart */}
         <div className="mt-auto space-y-2">
-          {/* Preset Options untuk Kg/Liter */}
+          {/* Preset Size Selection untuk Kg/Liter */}
           {hasPresets && (
             <div className="relative">
+              <label className="text-xs font-medium text-gray-600 block mb-1">
+                Pilih Ukuran:
+              </label>
               <button
                 onClick={() => setShowPresets(!showPresets)}
                 disabled={isOutOfStock}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-left font-medium"
               >
-                {getDisplayQuantity()} {unit}
+                {decimalToFraction(selectedSize)} {unit}
               </button>
 
               {/* Dropdown Presets */}
@@ -192,7 +182,7 @@ export default function ProductCard({
                         key={preset.label}
                         onClick={() => handlePresetSelect(preset.decimal)}
                         className={`px-2 py-1 text-xs rounded transition-colors font-medium ${
-                          quantity === preset.decimal
+                          selectedSize === preset.decimal
                             ? "bg-blue-500 text-white"
                             : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                         }`}
@@ -201,24 +191,16 @@ export default function ProductCard({
                       </button>
                     ))}
                   </div>
-                  <div className="border-t border-gray-200 p-2">
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={quantity}
-                      onChange={(e) => setQuantity(Math.max(0.01, parseFloat(e.target.value) || 1))}
-                      disabled={isOutOfStock}
-                      placeholder="Atau input manual"
-                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                  </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Standard Quantity Controls untuk satuan lain */}
-          {!hasPresets && (
+          {/* Quantity Selection */}
+          <div>
+            <label className="text-xs font-medium text-gray-600 block mb-1">
+              {hasPresets ? "Jumlah Item:" : "Jumlah:"}
+            </label>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -242,6 +224,13 @@ export default function ProductCard({
               >
                 +
               </button>
+            </div>
+          </div>
+
+          {/* Total Display untuk Kg/Liter */}
+          {hasPresets && (
+            <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded text-center">
+              Total: {decimalToFraction(selectedSize * quantity)} {unit}
             </div>
           )}
 

@@ -47,3 +47,9 @@ Sistem web UMKM lengkap telah berhasil dibangun dengan semua fitur yang diminta.
 ## Bug Fix - Qty Pecahan Format
 - [x] Ubah preset option dari desimal (0.25, 0.5) ke format pecahan (1/4, 1/2, 3/4) yang lebih user-friendly
 - [x] Update display di ProductCard dan CartSidebar untuk menampilkan format pecahan
+
+## Bug Fix - Qty Selection di ProductCard
+- [x] Tambahkan field qty terpisah di ProductCard untuk menentukan jumlah item
+- [x] Preset option untuk memilih ukuran (1/4, 1/2, 3/4 kg, dll)
+- [x] Input qty untuk jumlah item yang dibeli
+- [x] Contoh: 2x (1/2 kg) = 1 kg total
