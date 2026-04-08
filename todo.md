@@ -43,3 +43,7 @@ Sistem web UMKM lengkap telah berhasil dibangun dengan semua fitur yang diminta.
 - [x] Update cart.ts untuk handle decimal quantity
 - [x] Update Home.tsx untuk menampilkan preset qty options
 - [x] Testing fitur qty pecahan di semua halaman
+
+## Bug Fix - Qty Pecahan Format
+- [x] Ubah preset option dari desimal (0.25, 0.5) ke format pecahan (1/4, 1/2, 3/4) yang lebih user-friendly
+- [x] Update display di ProductCard dan CartSidebar untuk menampilkan format pecahan

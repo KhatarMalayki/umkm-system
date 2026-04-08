@@ -5,6 +5,17 @@ import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
 import { Cart, removeFromCart, updateCartItemQuantity } from "@/lib/cart";
 import { Link } from "wouter";
 
+// Helper untuk konversi desimal ke pecahan
+const decimalToFraction = (decimal: number): string => {
+  if (decimal === 0.25) return "1/4";
+  if (decimal === 0.5) return "1/2";
+  if (decimal === 0.75) return "3/4";
+  if (decimal === 1) return "1";
+  if (decimal === 1.5) return "1 1/2";
+  if (decimal === 2) return "2";
+  return decimal.toFixed(2);
+};
+
 interface CartSidebarProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -63,20 +74,22 @@ export default function CartSidebar({ open, onOpenChange, cart, onCartUpdate }: 
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleUpdateQuantity(item.productId, Math.max(0.01, item.quantity - (item.unit === 'Kg' || item.unit === 'Liter' ? 0.25 : 1)))}
+                      onClick={() => {
+                        const step = item.unit === 'Kg' || item.unit === 'Liter' ? 0.25 : 1;
+                        handleUpdateQuantity(item.productId, Math.max(0.01, item.quantity - step));
+                      }}
                       className="p-1 border border-gray-300 rounded hover:bg-gray-100"
                     >
                       <Minus size={14} />
                     </button>
-                    <input
-                      type="number"
-                      step={item.unit === 'Kg' || item.unit === 'Liter' ? "0.01" : "1"}
-                      value={item.quantity}
-                      onChange={(e) => handleUpdateQuantity(item.productId, Math.max(0.01, parseFloat(e.target.value) || 1))}
-                      className="flex-1 text-center text-sm font-medium border border-gray-300 rounded px-1 py-0.5"
-                    />
+                    <span className="flex-1 text-center text-sm font-medium">
+                      {item.unit === 'Kg' || item.unit === 'Liter' ? decimalToFraction(item.quantity) : item.quantity}
+                    </span>
                     <button
-                      onClick={() => handleUpdateQuantity(item.productId, item.quantity + (item.unit === 'Kg' || item.unit === 'Liter' ? 0.25 : 1))}
+                      onClick={() => {
+                        const step = item.unit === 'Kg' || item.unit === 'Liter' ? 0.25 : 1;
+                        handleUpdateQuantity(item.productId, item.quantity + step);
+                      }}
                       className="p-1 border border-gray-300 rounded hover:bg-gray-100"
                     >
                       <Plus size={14} />

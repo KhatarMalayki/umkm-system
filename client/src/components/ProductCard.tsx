@@ -19,6 +19,30 @@ interface ProductCardProps {
   onAddToCart: (quantity: number) => void;
 }
 
+// Helper untuk konversi desimal ke pecahan
+const decimalToFraction = (decimal: number): string => {
+  if (decimal === 0.25) return "1/4";
+  if (decimal === 0.5) return "1/2";
+  if (decimal === 0.75) return "3/4";
+  if (decimal === 1) return "1";
+  if (decimal === 1.5) return "1 1/2";
+  if (decimal === 2) return "2";
+  return decimal.toString();
+};
+
+// Helper untuk konversi pecahan string ke desimal
+const fractionToDecimal = (fraction: string): number => {
+  const fractionMap: Record<string, number> = {
+    "1/4": 0.25,
+    "1/2": 0.5,
+    "3/4": 0.75,
+    "1": 1,
+    "1 1/2": 1.5,
+    "2": 2,
+  };
+  return fractionMap[fraction] || parseFloat(fraction);
+};
+
 export default function ProductCard({
   id,
   name,
@@ -37,7 +61,14 @@ export default function ProductCard({
   // Preset options untuk satuan tertentu
   const getPresetOptions = () => {
     if (unit === "Kg" || unit === "Liter") {
-      return [0.25, 0.5, 0.75, 1, 1.5, 2];
+      return [
+        { decimal: 0.25, label: "1/4" },
+        { decimal: 0.5, label: "1/2" },
+        { decimal: 0.75, label: "3/4" },
+        { decimal: 1, label: "1" },
+        { decimal: 1.5, label: "1 1/2" },
+        { decimal: 2, label: "2" },
+      ];
     }
     return [];
   };
@@ -63,9 +94,8 @@ export default function ProductCard({
     setShowPresets(false);
   };
 
-  const formatQuantity = (q: number) => {
-    if (q % 1 === 0) return q.toString();
-    return q.toLocaleString("id-ID");
+  const getDisplayQuantity = () => {
+    return decimalToFraction(quantity);
   };
 
   return (
@@ -150,7 +180,7 @@ export default function ProductCard({
                 disabled={isOutOfStock}
                 className="w-full px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-left font-medium"
               >
-                {formatQuantity(quantity)} {unit}
+                {getDisplayQuantity()} {unit}
               </button>
 
               {/* Dropdown Presets */}
@@ -159,15 +189,15 @@ export default function ProductCard({
                   <div className="grid grid-cols-3 gap-1 p-2">
                     {presetOptions.map((preset) => (
                       <button
-                        key={preset}
-                        onClick={() => handlePresetSelect(preset)}
-                        className={`px-2 py-1 text-xs rounded transition-colors ${
-                          quantity === preset
+                        key={preset.label}
+                        onClick={() => handlePresetSelect(preset.decimal)}
+                        className={`px-2 py-1 text-xs rounded transition-colors font-medium ${
+                          quantity === preset.decimal
                             ? "bg-blue-500 text-white"
                             : "bg-gray-100 hover:bg-gray-200 text-gray-700"
                         }`}
                       >
-                        {formatQuantity(preset)}
+                        {preset.label}
                       </button>
                     ))}
                   </div>
