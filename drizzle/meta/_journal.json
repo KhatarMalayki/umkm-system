@@ -1,5 +1,27 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1775625128902,
+      "tag": "0000_abnormal_quasar",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1775629356783,
+      "tag": "0001_bumpy_george_stacy",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1775629444209,
+      "tag": "0002_bumpy_squirrel_girl",
+      "breakpoints": true
+    }
+  ]
 }

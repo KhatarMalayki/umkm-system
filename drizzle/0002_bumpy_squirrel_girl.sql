@@ -1,0 +1,1 @@
+ALTER TABLE `orders` MODIFY COLUMN `discountAmount` decimal(12,2) NOT NULL DEFAULT '0';
