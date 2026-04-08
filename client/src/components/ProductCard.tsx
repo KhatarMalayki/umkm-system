@@ -32,6 +32,18 @@ export default function ProductCard({
 }: ProductCardProps) {
   const [quantity, setQuantity] = useState(1);
   const [isAdding, setIsAdding] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
+
+  // Preset options untuk satuan tertentu
+  const getPresetOptions = () => {
+    if (unit === "Kg" || unit === "Liter") {
+      return [0.25, 0.5, 0.75, 1, 1.5, 2];
+    }
+    return [];
+  };
+
+  const presetOptions = getPresetOptions();
+  const hasPresets = presetOptions.length > 0;
 
   const priceAfterDiscount = calculatePriceAfterDiscount(price, discount);
   const discountPercentage =
@@ -42,7 +54,18 @@ export default function ProductCard({
     setIsAdding(true);
     onAddToCart(quantity);
     setQuantity(1);
+    setShowPresets(false);
     setTimeout(() => setIsAdding(false), 1000);
+  };
+
+  const handlePresetSelect = (value: number) => {
+    setQuantity(value);
+    setShowPresets(false);
+  };
+
+  const formatQuantity = (q: number) => {
+    if (q % 1 === 0) return q.toString();
+    return q.toLocaleString("id-ID");
   };
 
   return (
@@ -119,30 +142,78 @@ export default function ProductCard({
 
         {/* Quantity & Add to Cart */}
         <div className="mt-auto space-y-2">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setQuantity(Math.max(1, quantity - 1))}
-              disabled={isOutOfStock}
-              className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              −
-            </button>
-            <input
-              type="number"
-              value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-              disabled={isOutOfStock}
-              className="w-12 text-center border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              min="1"
-            />
-            <button
-              onClick={() => setQuantity(quantity + 1)}
-              disabled={isOutOfStock}
-              className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              +
-            </button>
-          </div>
+          {/* Preset Options untuk Kg/Liter */}
+          {hasPresets && (
+            <div className="relative">
+              <button
+                onClick={() => setShowPresets(!showPresets)}
+                disabled={isOutOfStock}
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white text-left font-medium"
+              >
+                {formatQuantity(quantity)} {unit}
+              </button>
+
+              {/* Dropdown Presets */}
+              {showPresets && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded shadow-lg z-10">
+                  <div className="grid grid-cols-3 gap-1 p-2">
+                    {presetOptions.map((preset) => (
+                      <button
+                        key={preset}
+                        onClick={() => handlePresetSelect(preset)}
+                        className={`px-2 py-1 text-xs rounded transition-colors ${
+                          quantity === preset
+                            ? "bg-blue-500 text-white"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                        }`}
+                      >
+                        {formatQuantity(preset)}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="border-t border-gray-200 p-2">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={quantity}
+                      onChange={(e) => setQuantity(Math.max(0.01, parseFloat(e.target.value) || 1))}
+                      disabled={isOutOfStock}
+                      placeholder="Atau input manual"
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Standard Quantity Controls untuk satuan lain */}
+          {!hasPresets && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                disabled={isOutOfStock}
+                className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                −
+              </button>
+              <input
+                type="number"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                disabled={isOutOfStock}
+                className="w-12 text-center border border-gray-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                min="1"
+              />
+              <button
+                onClick={() => setQuantity(quantity + 1)}
+                disabled={isOutOfStock}
+                className="px-2 py-1 border border-gray-300 rounded text-sm hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                +
+              </button>
+            </div>
+          )}
 
           <Button
             onClick={handleAddToCart}

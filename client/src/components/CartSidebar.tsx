@@ -49,10 +49,9 @@ export default function CartSidebar({ open, onOpenChange, cart, onCartUpdate }: 
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
                       <h4 className="font-semibold text-sm text-gray-900">{item.productName}</h4>
-                      <p className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500">
                         Rp {item.price.toLocaleString("id-ID")} / {item.unit}
-                      </p>
-                    </div>
+                      </span>                    </div>
                     <button
                       onClick={() => handleRemoveItem(item.productId)}
                       className="text-red-500 hover:text-red-700 p-1"
@@ -64,14 +63,20 @@ export default function CartSidebar({ open, onOpenChange, cart, onCartUpdate }: 
                   {/* Quantity Controls */}
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
+                      onClick={() => handleUpdateQuantity(item.productId, Math.max(0.01, item.quantity - (item.unit === 'Kg' || item.unit === 'Liter' ? 0.25 : 1)))}
                       className="p-1 border border-gray-300 rounded hover:bg-gray-100"
                     >
                       <Minus size={14} />
                     </button>
-                    <span className="flex-1 text-center text-sm font-medium">{item.quantity}</span>
+                    <input
+                      type="number"
+                      step={item.unit === 'Kg' || item.unit === 'Liter' ? "0.01" : "1"}
+                      value={item.quantity}
+                      onChange={(e) => handleUpdateQuantity(item.productId, Math.max(0.01, parseFloat(e.target.value) || 1))}
+                      className="flex-1 text-center text-sm font-medium border border-gray-300 rounded px-1 py-0.5"
+                    />
                     <button
-                      onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
+                      onClick={() => handleUpdateQuantity(item.productId, item.quantity + (item.unit === 'Kg' || item.unit === 'Liter' ? 0.25 : 1))}
                       className="p-1 border border-gray-300 rounded hover:bg-gray-100"
                     >
                       <Plus size={14} />
@@ -83,7 +88,7 @@ export default function CartSidebar({ open, onOpenChange, cart, onCartUpdate }: 
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal:</span>
                       <span className="font-semibold">
-                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                        Rp {(item.price * item.quantity).toLocaleString("id-ID", {maximumFractionDigits: 0})}
                       </span>
                     </div>
                   </div>

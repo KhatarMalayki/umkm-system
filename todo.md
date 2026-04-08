@@ -36,3 +36,10 @@
 
 ## Status: SELESAI ✓
 Sistem web UMKM lengkap telah berhasil dibangun dengan semua fitur yang diminta.
+
+## Feature Enhancement - Qty Pecahan
+- [x] Update ProductCard untuk support qty decimal dengan preset + input manual
+- [x] Update CartSidebar untuk menampilkan qty dengan format decimal
+- [x] Update cart.ts untuk handle decimal quantity
+- [x] Update Home.tsx untuk menampilkan preset qty options
+- [x] Testing fitur qty pecahan di semua halaman
