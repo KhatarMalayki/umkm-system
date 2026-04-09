@@ -51,7 +51,27 @@ git push origin main
 3. Authorize dan pilih repository `umkm-system`
 4. Railway akan auto-detect sebagai Node.js project
 
-#### 4. Configure Build Settings
+#### 4. Setup MySQL Database (PENTING: Lakukan Dulu!)
+
+Di Railway:
+
+1. Dashboard → Click "New"
+2. Pilih "MySQL"
+3. Railway akan auto-create database
+4. Tunggu sampai database selesai dibuat
+5. Copy connection string (akan digunakan di step berikutnya)
+
+**Format connection string:**
+```
+mysql://username:password@host:port/database_name
+```
+
+Contoh:
+```
+mysql://root:mypassword@containers-us-west-123.railway.app:3306/railway
+```
+
+#### 5. Configure Build Settings
 
 Railway akan otomatis mendeteksi, tapi pastikan:
 
@@ -67,16 +87,16 @@ pnpm start
 
 **Node Version:** v18+ (default sudah OK)
 
-#### 5. Setup Environment Variables
+#### 6. Setup Environment Variables
 
-Di Railway Dashboard:
+Sekarang setup environment variables di Railway Dashboard:
 
 1. Klik project → "Variables" tab
 2. Tambahkan environment variables berikut:
 
-**Database:**
+**Database (dari step 4):**
 ```
-DATABASE_URL=mysql://user:password@host:3306/dbname
+DATABASE_URL=mysql://username:password@host:port/database_name
 ```
 
 **Authentication:**
@@ -91,26 +111,9 @@ VITE_APP_TITLE=UMKM Store
 VITE_APP_LOGO=https://your-logo-url.png
 ```
 
-#### 6. Setup MySQL Database
-
-Di Railway:
-
-1. Dashboard → Click "New"
-2. Pilih "MySQL"
-3. Railway akan auto-create database
-4. Copy connection string ke `DATABASE_URL`
-
-**Format connection string:**
-```
-mysql://username:password@host:port/database_name
-```
-
-Contoh:
-```
-mysql://root:mypassword@containers-us-west-123.railway.app:3306/railway
-```
-
 #### 7. Run Database Migrations
+
+Setelah environment variables set dan database terhubung:
 
 Setelah deploy pertama kali, Anda perlu run migrations:
 
@@ -147,6 +150,8 @@ jobs:
 ```
 
 #### 8. Deploy & Monitor
+
+Setelah migrations berhasil:
 
 1. Railway akan auto-deploy setiap kali push ke GitHub
 2. Monitor di "Deployments" tab
