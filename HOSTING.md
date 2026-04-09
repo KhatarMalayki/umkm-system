@@ -6,100 +6,54 @@ Dokumen ini menjelaskan cara hosting dan menjalankan sistem web UMKM Anda di ber
 
 ## 📋 Daftar Isi
 
-1. [Hosting dengan Manus (Rekomendasi)](#hosting-dengan-manus-rekomendasi)
-2. [Hosting dengan Railway](#hosting-dengan-railway)
-3. [Hosting dengan Render](#hosting-dengan-render)
-4. [Hosting dengan Vercel + Backend Terpisah](#hosting-dengan-vercel--backend-terpisah)
-5. [Setup Database](#setup-database)
-6. [Environment Variables](#environment-variables)
+1. [Hosting dengan Railway (Rekomendasi)](#hosting-dengan-railway-rekomendasi)
+2. [Hosting dengan Render](#hosting-dengan-render)
+3. [Hosting dengan Vercel + Backend Terpisah](#hosting-dengan-vercel--backend-terpisah)
+4. [Setup Database](#setup-database)
+5. [Environment Variables](#environment-variables)
+6. [Troubleshooting](#troubleshooting)
 
 ---
 
-## Hosting dengan Manus (Rekomendasi)
+## Hosting dengan Railway (Rekomendasi)
 
 **Keuntungan:**
-- ✅ Sudah terintegrasi dengan project ini
+- ✅ Mudah setup dengan GitHub integration
+- ✅ Free tier tersedia (500 jam/bulan)
 - ✅ Database MySQL included
+- ✅ Auto-deploy setiap push ke GitHub
 - ✅ Custom domain support
-- ✅ SSL/HTTPS otomatis
-- ✅ Deployment dengan 1 klik
-- ✅ Analytics dan monitoring built-in
+- ✅ Environment variables management built-in
+- ✅ Monitoring dan logs real-time
 
-### Cara Hosting di Manus:
+### Langkah-langkah Detail:
 
-1. **Publish Project**
-   - Buka Management UI (klik tombol "Publish" di header)
-   - Sistem akan membuat checkpoint otomatis
-   - Klik "Publish" untuk deploy ke production
+#### 1. Persiapan Repository
 
-2. **Custom Domain**
-   - Di Management UI → Settings → Domains
-   - Tambahkan custom domain Anda (misal: umkm.com)
-   - Ikuti instruksi DNS configuration
-   - Domain akan aktif dalam beberapa menit
+Pastikan project sudah di-push ke GitHub:
 
-3. **Environment Variables**
-   - Semua env variables sudah dikonfigurasi otomatis
-   - Tidak perlu setup manual
-
-4. **Database**
-   - Database MySQL sudah tersedia
-   - Akses via Management UI → Database panel
-   - Connection info ada di Settings → Database
-
-**URL Production:**
-```
-https://umkmweb-ikjggkq7.manus.space
+```bash
+cd /home/ubuntu/umkm-system
+git remote -v  # Verify remote ke GitHub
+git push origin main
 ```
 
----
+#### 2. Buat Akun Railway
 
-## Hosting dengan Railway
+1. Kunjungi https://railway.app
+2. Sign up dengan GitHub (lebih mudah)
+3. Authorize Railway untuk akses repository
 
-**Keuntungan:**
-- Mudah setup
-- Free tier tersedia
-- Database MySQL included
-- GitHub integration
+#### 3. Create New Project di Railway
 
-### Langkah-langkah:
+1. Dashboard Railway → Click "New Project"
+2. Pilih "Deploy from GitHub repo"
+3. Authorize dan pilih repository `umkm-system`
+4. Railway akan auto-detect sebagai Node.js project
 
-1. **Persiapan Repository**
-   ```bash
-   cd /home/ubuntu/umkm-system
-   git remote -v  # Pastikan remote sudah ke GitHub
-   ```
+#### 4. Configure Build Settings
 
-2. **Buat Akun Railway**
-   - Kunjungi https://railway.app
-   - Sign up dengan GitHub
-
-3. **Deploy Project**
-   - Klik "New Project"
-   - Pilih "Deploy from GitHub repo"
-   - Pilih repository `umkm-system`
-   - Railway akan auto-detect sebagai Node.js project
-
-4. **Setup Environment Variables**
-   - Di Railway Dashboard, buka project
-   - Klik "Variables"
-   - Tambahkan semua env dari `.env.example`:
-     ```
-     DATABASE_URL=mysql://user:password@host/dbname
-     JWT_SECRET=your-secret-key
-     VITE_APP_ID=your-app-id
-     OAUTH_SERVER_URL=https://api.manus.im
-     VITE_OAUTH_PORTAL_URL=https://portal.manus.im
-     NODE_ENV=production
-     ```
-
-5. **Setup Database**
-   - Di Railway, klik "New" → "MySQL"
-   - Copy connection string ke `DATABASE_URL`
-
-6. **Deploy**
-   - Railway akan auto-deploy setiap kali push ke GitHub
-   - Monitor di "Deployments" tab
+Railway akan otomatis mendeteksi, tapi pastikan:
 
 **Build Command:**
 ```bash
@@ -111,50 +65,168 @@ pnpm install && pnpm build
 pnpm start
 ```
 
+**Node Version:** v18+ (default sudah OK)
+
+#### 5. Setup Environment Variables
+
+Di Railway Dashboard:
+
+1. Klik project → "Variables" tab
+2. Tambahkan environment variables berikut:
+
+**Database:**
+```
+DATABASE_URL=mysql://user:password@host:3306/dbname
+```
+
+**Authentication:**
+```
+JWT_SECRET=your-super-secret-key-minimum-32-characters-long
+NODE_ENV=production
+```
+
+**App Settings:**
+```
+VITE_APP_TITLE=UMKM Store
+VITE_APP_LOGO=https://your-logo-url.png
+```
+
+#### 6. Setup MySQL Database
+
+Di Railway:
+
+1. Dashboard → Click "New"
+2. Pilih "MySQL"
+3. Railway akan auto-create database
+4. Copy connection string ke `DATABASE_URL`
+
+**Format connection string:**
+```
+mysql://username:password@host:port/database_name
+```
+
+Contoh:
+```
+mysql://root:mypassword@containers-us-west-123.railway.app:3306/railway
+```
+
+#### 7. Run Database Migrations
+
+Setelah deploy pertama kali, Anda perlu run migrations:
+
+**Opsi A: Via Railway Shell**
+1. Di Railway Dashboard, klik service
+2. Klik "Shell" tab
+3. Run command:
+   ```bash
+   pnpm drizzle-kit migrate
+   ```
+
+**Opsi B: Via GitHub Actions** (Recommended)
+Buat file `.github/workflows/migrate.yml`:
+```yaml
+name: Database Migration
+on:
+  push:
+    branches: [main]
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm drizzle-kit migrate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+```
+
+#### 8. Deploy & Monitor
+
+1. Railway akan auto-deploy setiap kali push ke GitHub
+2. Monitor di "Deployments" tab
+3. View logs di "Logs" tab
+4. Check status di "Monitoring" tab
+
+**URL Production:**
+```
+https://umkm-system-production.up.railway.app
+```
+
+#### 9. Custom Domain (Optional)
+
+1. Di Railway Dashboard → Settings
+2. Klik "Custom Domain"
+3. Tambahkan domain Anda (misal: umkm.com)
+4. Update DNS records sesuai instruksi Railway
+5. Domain akan aktif dalam 24 jam
+
 ---
 
 ## Hosting dengan Render
 
-**Keuntunasi:**
+**Keuntungan:**
 - Free tier dengan 750 jam/bulan
 - Auto-deploy dari GitHub
 - Database PostgreSQL/MySQL
+- Unlimited bandwidth
 
 ### Langkah-langkah:
 
-1. **Buat Akun Render**
-   - Kunjungi https://render.com
-   - Sign up dengan GitHub
+#### 1. Buat Akun Render
 
-2. **Create New Web Service**
-   - Dashboard → New → Web Service
-   - Connect GitHub repository
-   - Pilih branch: `main`
+- Kunjungi https://render.com
+- Sign up dengan GitHub
 
-3. **Konfigurasi Build & Start**
-   - **Name:** umkm-system
-   - **Environment:** Node
-   - **Build Command:**
-     ```bash
-     pnpm install && pnpm build
-     ```
-   - **Start Command:**
-     ```bash
-     pnpm start
-     ```
+#### 2. Create New Web Service
 
-4. **Environment Variables**
-   - Di Render Dashboard, klik service
-   - Environment → Add Environment Variable
-   - Tambahkan semua env variables
+1. Dashboard → "New" → "Web Service"
+2. Connect GitHub repository
+3. Pilih branch: `main`
 
-5. **Database**
-   - Render Dashboard → New → MySQL
-   - Copy connection string ke `DATABASE_URL`
+#### 3. Konfigurasi Build & Start
 
-6. **Deploy**
-   - Klik "Deploy"
-   - Render akan build dan deploy otomatis
+- **Name:** umkm-system
+- **Environment:** Node
+- **Region:** Singapore (untuk latency rendah)
+- **Build Command:**
+  ```bash
+  pnpm install && pnpm build
+  ```
+- **Start Command:**
+  ```bash
+  pnpm start
+  ```
+
+#### 4. Environment Variables
+
+Di Render Dashboard:
+1. Klik service
+2. "Environment" → "Add Environment Variable"
+3. Tambahkan:
+   ```
+   DATABASE_URL=mysql://user:password@host/dbname
+   JWT_SECRET=your-secret-key
+   NODE_ENV=production
+   VITE_APP_TITLE=UMKM Store
+   ```
+
+#### 5. Setup Database
+
+1. Render Dashboard → "New" → "MySQL"
+2. Tunggu database selesai dibuat
+3. Copy connection string ke `DATABASE_URL`
+
+#### 6. Deploy
+
+1. Klik "Deploy"
+2. Render akan build dan deploy otomatis
+3. Monitor di "Logs" tab
 
 ---
 
@@ -164,155 +236,312 @@ pnpm start
 
 ### Frontend di Vercel:
 
-1. **Setup**
-   ```bash
-   cd /home/ubuntu/umkm-system/client
-   pnpm install
-   ```
+#### 1. Setup
 
-2. **Deploy ke Vercel**
-   - Kunjungi https://vercel.com
-   - Import GitHub repository
-   - Vercel auto-detect sebagai Vite project
+```bash
+cd /home/ubuntu/umkm-system/client
+pnpm install
+```
 
-3. **Build Settings**
-   - **Framework:** Vite
-   - **Build Command:** `pnpm build`
-   - **Output Directory:** `dist`
+#### 2. Deploy ke Vercel
+
+1. Kunjungi https://vercel.com
+2. Import GitHub repository
+3. Vercel auto-detect sebagai Vite project
+
+#### 3. Build Settings
+
+- **Framework:** Vite
+- **Build Command:** `pnpm build`
+- **Output Directory:** `dist`
+
+#### 4. Environment Variables
+
+Di Vercel Dashboard:
+```
+VITE_API_URL=https://your-backend-api.com
+```
 
 ### Backend di Railway/Render:
 
-Ikuti langkah Railway atau Render di atas, tapi hanya deploy folder `server/`.
+Ikuti langkah Railway atau Render di atas.
 
 ---
 
 ## Setup Database
 
-### Untuk MySQL (Recommended):
+### MySQL Setup untuk Production
 
-1. **Local Development**
-   ```bash
-   # Install MySQL
-   sudo apt-get install mysql-server
+#### 1. Create Database & User
 
-   # Login
-   mysql -u root -p
+```bash
+# Login ke MySQL
+mysql -u root -p
 
-   # Create database
-   CREATE DATABASE umkm_system;
-   CREATE USER 'umkm_user'@'localhost' IDENTIFIED BY 'password123';
-   GRANT ALL PRIVILEGES ON umkm_system.* TO 'umkm_user'@'localhost';
-   FLUSH PRIVILEGES;
-   ```
+# Create database
+CREATE DATABASE umkm_system;
 
-2. **Connection String**
-   ```
-   DATABASE_URL=mysql://umkm_user:password123@localhost:3306/umkm_system
-   ```
+# Create user dengan password strong
+CREATE USER 'umkm_user'@'%' IDENTIFIED BY 'StrongPassword123!@#';
 
-3. **Run Migrations**
-   ```bash
-   pnpm drizzle-kit generate
-   pnpm drizzle-kit migrate
-   ```
+# Grant permissions
+GRANT ALL PRIVILEGES ON umkm_system.* TO 'umkm_user'@'%';
+FLUSH PRIVILEGES;
 
-### Untuk Production (Cloud):
-
-**Railway MySQL:**
-```
-DATABASE_URL=mysql://user:password@containers-us-west-123.railway.app:3306/railway
+# Verify
+SHOW GRANTS FOR 'umkm_user'@'%';
+EXIT;
 ```
 
-**Render MySQL:**
+#### 2. Connection String Format
+
 ```
-DATABASE_URL=mysql://user:password@dpg-xxx.render.com:3306/dbname
+mysql://umkm_user:StrongPassword123!@#@localhost:3306/umkm_system
 ```
+
+#### 3. Run Migrations
+
+```bash
+# Generate migration files
+pnpm drizzle-kit generate
+
+# Run migrations
+pnpm drizzle-kit migrate
+```
+
+#### 4. Seed Data (Optional)
+
+```bash
+# Insert data dummy
+node server/seed-db.mjs
+```
+
+### Railway MySQL Connection
+
+Railway auto-generate connection string:
+
+```
+mysql://user:password@containers-us-west-123.railway.app:3306/railway
+```
+
+Copy langsung ke `DATABASE_URL` environment variable.
 
 ---
 
 ## Environment Variables
 
-Semua environment variables yang diperlukan:
+### Wajib (Required)
 
-```env
-# Database
-DATABASE_URL=mysql://user:password@host:3306/dbname
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `DATABASE_URL` | MySQL connection string | `mysql://user:pass@host:3306/db` |
+| `JWT_SECRET` | Secret key untuk auth (min 32 chars) | `your-super-secret-key-min-32-chars` |
+| `NODE_ENV` | Environment (development/production) | `production` |
 
-# Authentication
-JWT_SECRET=your-super-secret-key-min-32-chars
-VITE_APP_ID=your-manus-app-id
+### Optional
 
-# OAuth
-OAUTH_SERVER_URL=https://api.manus.im
-VITE_OAUTH_PORTAL_URL=https://portal.manus.im
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_APP_TITLE` | Judul aplikasi | `UMKM Store` |
+| `VITE_APP_LOGO` | URL logo aplikasi | - |
+| `PORT` | Port server | `3000` |
 
-# App Settings
-VITE_APP_TITLE=UMKM Store
-VITE_APP_LOGO=https://your-logo-url.png
+### Tidak Perlu untuk Railway
 
-# Analytics (Optional)
-VITE_ANALYTICS_ENDPOINT=https://analytics.manus.im
-VITE_ANALYTICS_WEBSITE_ID=your-website-id
-
-# Node Environment
-NODE_ENV=production
-```
+Variabel berikut hanya untuk Manus hosting (bisa abaikan):
+- `VITE_APP_ID`
+- `OAUTH_SERVER_URL`
+- `VITE_OAUTH_PORTAL_URL`
+- `BUILT_IN_FORGE_API_KEY`
+- `BUILT_IN_FORGE_API_URL`
 
 ---
 
 ## Checklist Pre-Deployment
 
-Sebelum deploy ke production, pastikan:
+Sebelum deploy ke production:
 
-- [ ] Semua environment variables sudah dikonfigurasi
 - [ ] Database sudah setup dan accessible
-- [ ] Migrations sudah dijalankan (`pnpm drizzle-kit migrate`)
-- [ ] Build berhasil tanpa error (`pnpm build`)
-- [ ] Testing lokal sudah dilakukan (`pnpm test`)
+- [ ] Environment variables sudah dikonfigurasi di Railway/Render
+- [ ] Build berhasil tanpa error: `pnpm build`
+- [ ] Testing lokal sudah dilakukan: `pnpm test`
 - [ ] Git commits sudah di-push ke GitHub
+- [ ] Database migrations sudah dijalankan
 - [ ] Custom domain sudah dikonfigurasi (jika ada)
+- [ ] Logs sudah di-check untuk errors
 
 ---
 
 ## Troubleshooting
 
 ### Build Error: "Cannot find module"
+
 ```bash
 # Clear cache dan reinstall
 rm -rf node_modules pnpm-lock.yaml
 pnpm install
+pnpm build
 ```
 
 ### Database Connection Error
-```bash
-# Cek connection string
-echo $DATABASE_URL
 
-# Test koneksi
-mysql -u user -p -h host -D dbname
+**Error:** `Error: connect ECONNREFUSED`
+
+**Solusi:**
+1. Verify `DATABASE_URL` format benar
+2. Cek MySQL server running
+3. Verify username/password correct
+4. Cek firewall/network access
+
+```bash
+# Test connection
+mysql -u user -p -h host -D database
 ```
 
 ### Port Already in Use
+
 ```bash
 # Gunakan port berbeda
-PORT=3001 pnpm dev
+PORT=3001 pnpm start
 ```
 
-### Deployment Stuck
-- Cek logs di hosting platform
-- Pastikan build command benar
-- Verify environment variables sudah set
+### Deployment Stuck/Timeout
+
+1. Check Railway/Render logs
+2. Verify build command benar
+3. Check disk space (Railway free tier limited)
+4. Reduce build size (remove unused dependencies)
+
+### Migrations Failed
+
+```bash
+# Check migration status
+pnpm drizzle-kit migrate --verbose
+
+# Rollback last migration
+# (Manual: drop tables dan rerun)
+```
+
+### 502 Bad Gateway Error
+
+1. Check server logs
+2. Verify environment variables set correctly
+3. Check database connection
+4. Restart deployment
+
+---
+
+## Performance Tips
+
+### 1. Database Optimization
+
+```sql
+-- Add indexes untuk frequently queried fields
+CREATE INDEX idx_product_category ON products(category);
+CREATE INDEX idx_order_user_id ON orders(user_id);
+CREATE INDEX idx_order_created_at ON orders(created_at);
+```
+
+### 2. Caching Strategy
+
+- Leverage browser caching (static assets)
+- Implement Redis caching untuk frequently accessed data
+- Cache database queries dengan TTL
+
+### 3. Image Optimization
+
+- Compress images sebelum upload
+- Use WebP format jika possible
+- Lazy load images di frontend
+
+### 4. Code Optimization
+
+- Tree-shake unused dependencies
+- Minify CSS/JS di production
+- Use CDN untuk static assets
+
+---
+
+## Security Checklist
+
+- [ ] `JWT_SECRET` sudah strong (min 32 chars, mix of upper/lower/numbers/symbols)
+- [ ] Database password sudah strong
+- [ ] `.env` file tidak di-commit ke repository
+- [ ] HTTPS enabled (auto di Railway/Render)
+- [ ] CORS dikonfigurasi dengan benar
+- [ ] Input validation di semua forms
+- [ ] SQL injection protection (Drizzle ORM handles)
+- [ ] Rate limiting implemented (optional)
+
+---
+
+## Monitoring & Logs
+
+### Railway
+
+1. Dashboard → Service → "Logs" tab
+2. Real-time logs dari server
+3. Filter by level (error, warning, info)
+4. Export logs untuk analysis
+
+### Render
+
+1. Dashboard → Service → "Logs" tab
+2. View deployment logs dan runtime logs
+3. Search dan filter capabilities
+
+### Common Log Patterns
+
+```
+[ERROR] Database connection failed
+[WARN] Slow query detected
+[INFO] Server started on port 3000
+[ERROR] Unhandled promise rejection
+```
+
+---
+
+## Scaling untuk Production
+
+### Jika traffic tinggi:
+
+1. **Upgrade Railway/Render plan** untuk lebih resources
+2. **Add database replicas** untuk read scaling
+3. **Implement caching layer** (Redis)
+4. **Use CDN** untuk static assets (Cloudflare)
+5. **Monitor performance** dengan APM tools
 
 ---
 
 ## Support & Resources
 
-- **Manus Docs:** https://docs.manus.im
 - **Railway Docs:** https://docs.railway.app
 - **Render Docs:** https://render.com/docs
 - **Drizzle ORM:** https://orm.drizzle.team
+- **Express.js:** https://expressjs.com
+- **MySQL:** https://dev.mysql.com/doc
+
+---
+
+## FAQ
+
+**Q: Berapa biaya hosting di Railway?**
+A: Free tier 500 jam/bulan, atau bayar sesuai usage (~$5/bulan untuk small project)
+
+**Q: Apakah bisa pakai PostgreSQL?**
+A: Ya, tinggal ganti `DATABASE_URL` dan update Drizzle config
+
+**Q: Bagaimana cara backup database?**
+A: Railway/Render provide automated backups. Manual backup via mysqldump
+
+**Q: Bisa deploy multiple instances?**
+A: Ya, Railway/Render support horizontal scaling
+
+**Q: Bagaimana monitoring uptime?**
+A: Gunakan UptimeRobot atau Pingdom untuk monitoring
 
 ---
 
 **Last Updated:** April 2026
-**Version:** 1.0.0
+**Version:** 2.0.0
+**Recommended Platform:** Railway
