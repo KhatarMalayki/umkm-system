@@ -194,7 +194,18 @@ https://umkm-system-production.up.railway.app
 2. Connect GitHub repository
 3. Pilih branch: `main`
 
-#### 3. Konfigurasi Build & Start
+#### 3. Setup MySQL Database (PENTING: Lakukan Dulu!)
+
+1. Render Dashboard → "New" → "MySQL"
+2. Tunggu database selesai dibuat
+3. Copy connection string (akan digunakan di step berikutnya)
+
+**Format connection string:**
+```
+mysql://username:password@host:port/database_name
+```
+
+#### 4. Konfigurasi Build & Start
 
 - **Name:** umkm-system
 - **Environment:** Node
@@ -208,24 +219,18 @@ https://umkm-system-production.up.railway.app
   pnpm start
   ```
 
-#### 4. Environment Variables
+#### 5. Environment Variables
 
 Di Render Dashboard:
 1. Klik service
 2. "Environment" → "Add Environment Variable"
 3. Tambahkan:
    ```
-   DATABASE_URL=mysql://user:password@host/dbname
+   DATABASE_URL=mysql://username:password@host:port/database_name
    JWT_SECRET=your-secret-key
    NODE_ENV=production
    VITE_APP_TITLE=UMKM Store
    ```
-
-#### 5. Setup Database
-
-1. Render Dashboard → "New" → "MySQL"
-2. Tunggu database selesai dibuat
-3. Copy connection string ke `DATABASE_URL`
 
 #### 6. Deploy
 
@@ -237,7 +242,17 @@ Di Render Dashboard:
 
 ## Hosting dengan Vercel + Backend Terpisah
 
-**Catatan:** Vercel hanya support frontend static/serverless. Backend harus di-host terpisah.
+**Catatan:** Vercel hanya support frontend static/serverless. Backend harus di-host terpisah di Railway atau Render.
+
+### Backend di Railway/Render (PENTING: Setup Dulu!):
+
+Ikuti langkah Railway atau Render di atas untuk:
+1. Setup MySQL Database
+2. Configure Build & Start
+3. Setup Environment Variables
+4. Deploy backend
+
+Setelah backend selesai deploy, catat URL-nya (misal: `https://your-backend-api.railway.app`)
 
 ### Frontend di Vercel:
 
@@ -264,12 +279,10 @@ pnpm install
 
 Di Vercel Dashboard:
 ```
-VITE_API_URL=https://your-backend-api.com
+VITE_API_URL=https://your-backend-api.railway.app
 ```
 
-### Backend di Railway/Render:
-
-Ikuti langkah Railway atau Render di atas.
+Ganti dengan URL backend yang sudah di-deploy di Railway/Render
 
 ---
 
